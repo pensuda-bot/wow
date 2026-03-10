@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Wow ลูกชิ้นทอด POS</title>
+
+<style>
+
+body{
+font-family:sans-serif;
+background:#f5f5f5;
+padding:15px;
+}
+
+.card{
+background:white;
+padding:15px;
+border-radius:12px;
+margin-bottom:15px;
+}
+
+button{
+padding:12px;
+border:none;
+border-radius:10px;
+background:#ff7a00;
+color:white;
+font-size:16px;
+width:100%;
+margin-top:10px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:5px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+.item{
+display:flex;
+justify-content:space-between;
+margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>🍢 Wow ลูกชิ้นทอด</h2>
+
+<div class="card">
+
+<label>เลือกสาขา</label>
+
+<select id="branch">
+
+<option>หน้า7-11</option>
+<option>ตลาดสด</option>
+
+</select>
+
+</div>
+
+<div class="card">
+
+<h3>สินค้า</h3>
+
+<div id="items"></div>
+
+<button onclick="addItem()">+ เพิ่มสินค้า</button>
+
+</div>
+
+<div class="card">
+
+<h3>ยอดขายวันนี้</h3>
+
+<div id="totalSticks">0 ไม้</div>
+
+<div id="totalMoney">฿0</div>
+
+</div>
+
+<div class="card">
+
+<h3>ปิดร้านวันนี้</h3>
+
+<label>เงินสด</label>
+
+<input id="cash">
+
+<label>เงินโอน</label>
+
+<input id="transfer">
+
+<button onclick="closeShop()">🔒 ปิดร้าน</button>
+
+<div id="summary"></div>
+
+</div>
+
+<div class="card">
+
+<h3>🏆 สาขาขายดีที่สุด</h3>
+
+<div id="branchRank"></div>
+
+</div>
+
+<div class="card">
+
+<h3>📅 ยอดขายรายเดือน</h3>
+
+<div id="monthSales"></div>
+
+</div>
+
+<script>
+
+let price = 10
+
+let items = [
+{name:"ลูกชิ้นปลา",stock:50,sold:0},
+{name:"ไส้กรอกแดง",stock:50,sold:0},
+{name:"ชีสบอล",stock:50,sold:0}
+]
+
+let salesHistory = []
+
+function renderItems(){
+
+let html=""
+
+items.forEach((item,i)=>{
+
+html+=`
+
+<div class="item">
+
+<div>
+
+${item.name}
+
+<br>
+
+เหลือ ${item.stock}
+
+</div>
+
+<div>
+
+<button onclick="sell(${i})">+1</button>
+
+</div>
+
+</div>
+
+`
+
+})
+
+document.getElementById("items").innerHTML=html
+
+updateTotals()
+
+}
+
+function sell(i){
+
+if(items[i].stock<=0){
+
+alert("ของหมด")
+
+return
+
+}
+
+items[i].stock--
+
+items[i].sold++
+
+renderItems()
+
+}
+
+function updateTotals(){
+
+let sticks=0
+
+items.forEach(i=>sticks+=i.sold)
+
+document.getElementById("totalSticks").innerText=
+
+sticks+" ไม้"
+
+document.getElementById("totalMoney").innerText=
+
+"฿"+sticks*price
+
+}
+
+function closeShop(){
+
+let sticks=0
+
+items.forEach(i=>sticks+=i.sold)
+
+let expected=sticks*price
+
+let cash=parseFloat(
+
+document.getElementById("cash").value||0)
+
+let transfer=parseFloat(
+
+document.getElementById("transfer").value||0)
+
+let actual=cash+transfer
+
+let diff=actual-expected
+
+document.getElementById("summary").innerHTML=
+
+`
+
+ยอดขาย ${sticks} ไม้<br>
+
+ควรได้ ฿${expected}<br>
+
+ได้เงินจริง ฿${actual}<br>
+
+ขาด/เกิน ${diff}
+
+`
+
+let branch=document.getElementById("branch").value
+
+salesHistory.push({
+
+branch:branch,
+
+money:expected,
+
+date:new Date()
+
+})
+
+updateBranchRank()
+
+updateMonthly()
+
+}
+
+function updateBranchRank(){
+
+let totals={}
+
+salesHistory.forEach(s=>{
+
+if(!totals[s.branch]) totals[s.branch]=0
+
+totals[s.branch]+=s.money
+
+})
+
+let arr=Object.entries(totals)
+
+arr.sort((a,b)=>b[1]-a[1])
+
+let html=""
+
+arr.forEach((b,i)=>{
+
+html+=`${i+1}. ${b[0]} - ฿${b[1]}<br>`
+
+})
+
+document.getElementById("branchRank").innerHTML=html
+
+}
+
+function updateMonthly(){
+
+let month=new Date().getMonth()
+
+let total=0
+
+salesHistory.forEach(s=>{
+
+if(new Date(s.date).getMonth()==month)
+
+total+=s.money
+
+})
+
+document.getElementById("monthSales").innerText=
+
+"ยอดเดือนนี้ ฿"+total
+
+}
+
+function addItem(){
+
+let name=prompt("ชื่อสินค้า")
+
+if(!name) return
+
+items.push({name:name,stock:50,sold:0})
+
+renderItems()
+
+}
+
+renderItems()
+
+</script>
+
+</body>
+</html>
